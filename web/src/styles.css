@@ -48,6 +48,43 @@ body {
   border-color: #2c3e50;
 }
 
+/* 카테고리 칩 필터 */
+.cat-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.chip:hover {
+  border-color: #bbb;
+  background: #f7f7f7;
+}
+
+.chip.on {
+  background: #2c3e50;
+  border-color: #2c3e50;
+  color: #fff;
+}
+
+.chip-cnt {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-left: 2px;
+}
+
 .summary {
   color: #555;
   font-size: 13px;

@@ -13,6 +13,7 @@ export interface Product {
   name: string | null;
   url: string | null;
   image: string | null; // 썸네일 URL
+  category: string | null; // 가장 최근 스냅샷의 카테고리
   listPrice: number | null; // 정가
   currentPrice: number | null; // 평소(비세일) 최신 판매가
   saleFloor: number | null; // 세일 구간 최저가

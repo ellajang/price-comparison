@@ -33,12 +33,15 @@ function getProducts() {
     const normals = points.filter((pt) => !pt.isSalePeriod && pt.salePrice != null);
     const listPrices = points.map((pt) => pt.listPrice).filter((v) => v != null);
 
+    const latest = points.length ? points[points.length - 1] : null;
     return {
       goodsNo: p.goods_no,
       brand: p.brand,
       name: p.name,
       url: p.url,
       image: p.image_url,
+      category: latest ? latest.category : null, // 가장 최근 스냅샷의 카테고리
+
       listPrice: listPrices.length ? Math.max(...listPrices) : null,
       currentPrice: normals.length ? normals[normals.length - 1].salePrice : null,
       saleFloor: sales.length ? Math.min(...sales.map((pt) => pt.salePrice)) : null,
