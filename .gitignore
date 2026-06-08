@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+web/node_modules/
+
+# build output
+web/dist/
+*.tsbuildinfo
+
+# SQLite WAL 사이드카 (data.db 본체만 커밋 — gen-data.js가 체크포인트함)
+data.db-wal
+data.db-shm
+
+# misc
+.DS_Store
+*.log
