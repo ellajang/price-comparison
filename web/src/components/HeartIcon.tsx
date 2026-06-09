@@ -4,7 +4,7 @@ interface HeartIconProps {
 }
 
 // 채워짐/테두리 두 상태를 currentColor로 표현 (색은 CSS가 제어)
-export function HeartIcon({ filled, size = 18 }: HeartIconProps) {
+export function HeartIcon({ filled, size = 14 }: HeartIconProps) {
   return (
     <svg
       className="heart-icon"
