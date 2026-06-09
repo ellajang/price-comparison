@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { getProducts } = require('./getProducts');
+const { setWatched } = require('./db');
 
 const PORT = 3000;
 const DIST_DIR = path.join(__dirname, 'web', 'dist');
@@ -56,10 +57,39 @@ function serveStatic(req, res) {
   });
 }
 
+// 관심 상품 토글 (로컬 전용 쓰기 — 배포 Pages엔 이 엔드포인트가 없음)
+function handleWatch(req, res) {
+  let body = '';
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > 1e4) req.destroy(); // 비정상 페이로드 방어
+  });
+  req.on('end', () => {
+    try {
+      const { goodsNo, watched } = JSON.parse(body);
+      if (typeof goodsNo !== 'string' || typeof watched !== 'boolean') {
+        res.writeHead(400, { 'content-type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'goodsNo(string), watched(boolean) 필요' }));
+        return;
+      }
+      const ok = setWatched(goodsNo, watched);
+      sendJson(res, { goodsNo, watched, updated: ok });
+    } catch {
+      res.writeHead(400, { 'content-type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'JSON 파싱 실패' }));
+    }
+  });
+}
+
 http
   .createServer((req, res) => {
-    if (req.url.split('?')[0] === '/api/products') {
+    const pathname = req.url.split('?')[0];
+    if (pathname === '/api/products') {
       sendJson(res, getProducts());
+      return;
+    }
+    if (pathname === '/api/watch' && req.method === 'POST') {
+      handleWatch(req, res);
       return;
     }
     serveStatic(req, res);

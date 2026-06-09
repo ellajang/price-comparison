@@ -3,13 +3,16 @@ import { PriceRow } from '@/components/PriceRow';
 
 interface PriceTableProps {
   products: Product[];
+  isLive: boolean;
+  onToggleWatch: (goodsNo: string) => void;
 }
 
-export function PriceTable({ products }: PriceTableProps) {
+export function PriceTable({ products, isLive, onToggleWatch }: PriceTableProps) {
   return (
     <table className="price-table">
       <thead>
         <tr>
+          <th className="heart"></th>
           <th className="thumb"></th>
           <th>브랜드</th>
           <th>상품명</th>
@@ -23,7 +26,7 @@ export function PriceTable({ products }: PriceTableProps) {
       </thead>
       <tbody>
         {products.map((p) => (
-          <PriceRow key={p.goodsNo} product={p} />
+          <PriceRow key={p.goodsNo} product={p} isLive={isLive} onToggleWatch={onToggleWatch} />
         ))}
       </tbody>
     </table>

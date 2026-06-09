@@ -4,7 +4,7 @@ import { PriceTable } from '@/components/PriceTable';
 import { CategoryFilter, type CategoryCount } from '@/components/CategoryFilter';
 
 export function App() {
-  const { products, isLoading, error } = useProducts();
+  const { products, isLoading, error, isLive, toggleWatch } = useProducts();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [watchedOnly, setWatchedOnly] = useState(false);
@@ -22,7 +22,7 @@ export function App() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return products.filter((p) => {
+    const matched = products.filter((p) => {
       if (watchedOnly && !p.watched) return false;
       if (category && p.category !== category) return false;
       if (q && !(p.brand?.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q))) {
@@ -30,6 +30,8 @@ export function App() {
       }
       return true;
     });
+    // 찜한 상품을 최상단으로 핀 (그 안에선 기존 순서 유지)
+    return [...matched].sort((a, b) => Number(b.watched) - Number(a.watched));
   }, [products, query, category, watchedOnly]);
 
   const watchedCount = products.filter((p) => p.watched).length;
@@ -78,7 +80,7 @@ export function App() {
               </>
             )}
           </p>
-          <PriceTable products={filtered} />
+          <PriceTable products={filtered} isLive={isLive} onToggleWatch={toggleWatch} />
         </>
       )}
     </main>

@@ -42,8 +42,48 @@ body {
   flex-wrap: wrap;
 }
 
-.star {
-  margin-right: 4px;
+/* 찜 하트 */
+.heart {
+  width: 34px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 0;
+}
+
+.heart-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 6px;
+  filter: grayscale(1);
+  opacity: 0.55;
+  transition: filter 0.12s, opacity 0.12s, transform 0.12s;
+}
+
+.heart-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.heart-btn[aria-pressed='true'] {
+  filter: none;
+  opacity: 1;
+}
+
+.heart-ro {
+  font-size: 14px;
+}
+
+/* 찜한 행 강조 + 핀 표시 */
+.row-watched td {
+  background: #fff6f8;
+}
+
+.row-watched:hover td {
+  background: #ffeef2;
 }
 
 .search {

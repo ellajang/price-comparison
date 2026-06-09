@@ -6,9 +6,11 @@ import { TrendSparkline } from '@/components/TrendSparkline';
 
 interface PriceRowProps {
   product: Product;
+  isLive: boolean; // 라이브(로컬)면 하트 클릭 가능
+  onToggleWatch: (goodsNo: string) => void;
 }
 
-export function PriceRow({ product }: PriceRowProps) {
+export function PriceRow({ product, isLive, onToggleWatch }: PriceRowProps) {
   // 현재(가장 최근) 판매가가 역대 최저가에 닿았는가 — 추적 이력이 2개 이상일 때만 (1일치 노이즈 방지)
   const latestSale = product.history.at(-1)?.salePrice ?? null;
   const isLowestNow =
@@ -18,7 +20,24 @@ export function PriceRow({ product }: PriceRowProps) {
     product.history.length > 1;
 
   return (
-    <tr className={isLowestNow ? 'row-lowest' : undefined}>
+    <tr className={`${product.watched ? 'row-watched' : ''} ${isLowestNow ? 'row-lowest' : ''}`.trim() || undefined}>
+      <td className="heart">
+        {isLive ? (
+          <button
+            type="button"
+            className="heart-btn"
+            aria-pressed={product.watched}
+            title={product.watched ? '찜 해제' : '찜하기'}
+            onClick={() => onToggleWatch(product.goodsNo)}
+          >
+            {product.watched ? '❤️' : '🤍'}
+          </button>
+        ) : product.watched ? (
+          <span className="heart-ro" title="찜한 상품">
+            ❤️
+          </span>
+        ) : null}
+      </td>
       <td className="thumb">
         {product.image ? (
           <img src={product.image} alt="" loading="lazy" decoding="async" width={44} height={44} />
@@ -28,11 +47,6 @@ export function PriceRow({ product }: PriceRowProps) {
       </td>
       <td>{product.brand ?? '-'}</td>
       <td className="name">
-        {product.watched && (
-          <span className="star" title="관심 상품">
-            ⭐
-          </span>
-        )}
         {product.url ? (
           <a href={product.url} target="_blank" rel="noopener noreferrer">
             {product.name ?? '-'}
