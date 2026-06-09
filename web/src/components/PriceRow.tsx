@@ -28,6 +28,11 @@ export function PriceRow({ product }: PriceRowProps) {
       </td>
       <td>{product.brand ?? '-'}</td>
       <td className="name">
+        {product.watched && (
+          <span className="star" title="관심 상품">
+            ⭐
+          </span>
+        )}
         {product.url ? (
           <a href={product.url} target="_blank" rel="noopener noreferrer">
             {product.name ?? '-'}

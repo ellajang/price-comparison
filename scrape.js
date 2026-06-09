@@ -1,7 +1,7 @@
 // 올리브영 카테고리별 베스트 가격 수집 → SQLite 저장
 // 베스트 페이지를 한 번만 연 뒤(=Cloudflare 1회 통과), 카테고리 탭을 순회 클릭하며 수집한다.
 const { chromium } = require('playwright');
-const { saveItems } = require('./db');
+const { saveItems, getWatchlist } = require('./db');
 
 // 올리브영 정기 세일(올영세일)은 "월 전체"가 아니라 며칠짜리 행사다.
 // 세일 공지가 뜨면 그 날짜 구간을 여기에 추가하세요. 이 구간에 수집한 가격만 "세일가"로 기록됨.
@@ -118,6 +118,40 @@ async function scrapeCategory(page, cat) {
   return extractCurrentList(page);
 }
 
+// 관심 상품의 상세 페이지로 직접 방문해 현재가 추출 (순위 밖이어도 추적)
+async function scrapeDetail(page, product) {
+  await page.goto(product.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  await page.waitForTimeout(4000);
+  const data = await page.evaluate(() => {
+    const toNum = (s) => {
+      if (!s) return null;
+      const n = s.replace(/[^0-9]/g, '');
+      return n ? parseInt(n, 10) : null;
+    };
+    // CSS 모듈 해시는 바뀔 수 있어 클래스 접두로 매칭
+    const pick = (re) => {
+      for (const el of document.querySelectorAll('[class*="GoodsDetailInfo_price"]')) {
+        if (re.test(el.className)) return el.textContent;
+      }
+      return null;
+    };
+    return {
+      listPrice: toNum(pick(/GoodsDetailInfo_price-before/)), // 정가(취소선)
+      salePrice: toNum(pick(/GoodsDetailInfo_price__/)), // 현재 판매가
+    };
+  });
+  if (data.salePrice == null) throw new Error('가격 추출 실패(페이지 구조 변경?)');
+  return {
+    goodsNo: product.goods_no,
+    brand: product.brand,
+    name: product.name,
+    url: product.url,
+    image: product.image_url, // 기존 썸네일 유지 (null로 덮어쓰지 않도록)
+    listPrice: data.listPrice,
+    salePrice: data.salePrice,
+  };
+}
+
 (async () => {
   const date = todayStr();
   const isSalePeriod = isSaleDay(date);
@@ -135,6 +169,7 @@ async function scrapeCategory(page, cat) {
 
     let total = 0;
     const failed = [];
+    const seenToday = new Set(); // 이번 베스트 수집에서 본 goodsNo
     for (const cat of cats) {
       try {
         const items = await scrapeCategory(page, cat);
@@ -142,6 +177,7 @@ async function scrapeCategory(page, cat) {
           failed.push(cat.name);
           console.error(`  [${cat.name}] 0개 (재렌더 실패 추정)`);
         } else {
+          items.forEach((it) => seenToday.add(it.goodsNo));
           saveItems(items, { date, isSalePeriod, category: cat.name });
           total += items.length;
           console.log(`  [${cat.name}] ${items.length}개 저장`);
@@ -151,6 +187,23 @@ async function scrapeCategory(page, cat) {
         console.error(`  [${cat.name}] 실패: ${e.message}`);
       }
       await page.waitForTimeout(2000); // 사람처럼 간격 두기
+    }
+
+    // 관심 상품 중 베스트에 없던 것 → 상세페이지로 직접 추적 (순위 밖이어도 가격 갱신)
+    const dropped = getWatchlist().filter((w) => w.url && !seenToday.has(w.goods_no));
+    if (dropped.length) {
+      console.log(`관심 상품 중 베스트 밖 ${dropped.length}개 → 상세페이지로 추적`);
+      for (const w of dropped) {
+        try {
+          const item = await scrapeDetail(page, w);
+          saveItems([item], { date, isSalePeriod, category: w.category ?? '관심상품' });
+          total += 1;
+          console.log(`  ⭐ ${(w.name ?? '').slice(0, 28)} → ${item.salePrice}원`);
+        } catch (e) {
+          console.error(`  ⭐ ${(w.name ?? '').slice(0, 20)} 실패: ${e.message}`);
+        }
+        await page.waitForTimeout(2000);
+      }
     }
 
     console.log(`완료: 총 ${total}개 수집 (중복 상품은 last-wins로 병합) → data.db`);

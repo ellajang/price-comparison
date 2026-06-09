@@ -14,6 +14,7 @@ db.exec(`
     image_url         TEXT,
     lowest_price      INTEGER,   -- 역대 최저 판매가 (영구 박제, 매 수집 시 비교 갱신)
     lowest_price_date TEXT,      -- 그 최저가가 찍힌 날짜
+    watched           INTEGER NOT NULL DEFAULT 0,  -- 관심 상품(순위 밖이어도 상세페이지로 추적)
     first_seen        TEXT,
     last_seen         TEXT
   );
@@ -36,6 +37,9 @@ db.exec(`
 const productCols = db.prepare(`PRAGMA table_info(products)`).all().map((c) => c.name);
 if (!productCols.includes('image_url')) {
   db.exec(`ALTER TABLE products ADD COLUMN image_url TEXT`);
+}
+if (!productCols.includes('watched')) {
+  db.exec(`ALTER TABLE products ADD COLUMN watched INTEGER NOT NULL DEFAULT 0`);
 }
 if (!productCols.includes('lowest_price')) {
   db.exec(`ALTER TABLE products ADD COLUMN lowest_price INTEGER`);
@@ -135,4 +139,36 @@ function saveItems(items, meta) {
   tx(items);
 }
 
-module.exports = { db, saveItems };
+// ── 관심 상품(watchlist) 관리 ──────────────────────────────
+const setWatchedStmt = db.prepare(`UPDATE products SET watched = @on WHERE goods_no = @goodsNo`);
+
+// 이름 부분일치 또는 goodsNo 정확일치로 상품 검색
+const searchProductsStmt = db.prepare(`
+  SELECT goods_no, brand, name, watched FROM products
+  WHERE goods_no = @q OR name LIKE @like
+  ORDER BY watched DESC, name
+  LIMIT 20
+`);
+
+// 관심 상품 목록 (상세페이지 추적용) — 최근 카테고리도 함께
+const watchlistStmt = db.prepare(`
+  SELECT p.goods_no, p.brand, p.name, p.url, p.image_url,
+    (SELECT s.category FROM price_snapshots s WHERE s.goods_no = p.goods_no
+     ORDER BY s.captured_at DESC LIMIT 1) AS category
+  FROM products p WHERE p.watched = 1
+`);
+
+function setWatched(goodsNo, on) {
+  const r = setWatchedStmt.run({ goodsNo, on: on ? 1 : 0 });
+  return r.changes > 0;
+}
+
+function searchProducts(query) {
+  return searchProductsStmt.all({ q: query, like: `%${query}%` });
+}
+
+function getWatchlist() {
+  return watchlistStmt.all();
+}
+
+module.exports = { db, saveItems, setWatched, searchProducts, getWatchlist };

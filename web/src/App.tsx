@@ -7,6 +7,7 @@ export function App() {
   const { products, isLoading, error } = useProducts();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
+  const [watchedOnly, setWatchedOnly] = useState(false);
 
   // 카테고리별 개수 (개수 많은 순)
   const categories = useMemo<CategoryCount[]>(() => {
@@ -22,29 +23,39 @@ export function App() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products.filter((p) => {
+      if (watchedOnly && !p.watched) return false;
       if (category && p.category !== category) return false;
       if (q && !(p.brand?.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q))) {
         return false;
       }
       return true;
     });
-  }, [products, query, category]);
+  }, [products, query, category, watchedOnly]);
 
-  const saleCount = products.filter((p) => p.saleFloor != null).length;
-  const curCount = products.filter((p) => p.currentPrice != null).length;
-  const isFiltering = category !== null || query.trim() !== '';
+  const watchedCount = products.filter((p) => p.watched).length;
+  const isFiltering = category !== null || watchedOnly || query.trim() !== '';
 
   return (
     <main className="app">
       <header className="app-header">
         <h1>🛒 올리브영 가격 비교</h1>
-        <input
-          type="search"
-          className="search"
-          placeholder="브랜드·상품명 검색"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="header-controls">
+          <button
+            type="button"
+            className={`chip ${watchedOnly ? 'on' : ''}`}
+            aria-pressed={watchedOnly}
+            onClick={() => setWatchedOnly((v) => !v)}
+          >
+            ⭐ 관심상품 <span className="chip-cnt">{watchedCount}</span>
+          </button>
+          <input
+            type="search"
+            className="search"
+            placeholder="브랜드·상품명 검색"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       </header>
 
       {isLoading && <p className="state">불러오는 중…</p>}
@@ -59,16 +70,12 @@ export function App() {
             onSelect={setCategory}
           />
           <p className="summary">
-            상품 <b>{products.length}</b>개 · 세일 기준가 <b>{saleCount}</b> · 평소 현재가{' '}
-            <b>{curCount}</b>
+            상품 <b>{products.length}</b>개 · ⭐ 관심 <b>{watchedCount}</b>
             {isFiltering && (
               <>
                 {' '}
                 · 표시 <b>{filtered.length}</b>
               </>
-            )}
-            {curCount === 0 && (
-              <span className="hint"> — 세일이 아닌 달에 다시 수집하면 비교가 채워집니다.</span>
             )}
           </p>
           <PriceTable products={filtered} />

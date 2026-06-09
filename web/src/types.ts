@@ -20,5 +20,6 @@ export interface Product {
   recentSale: number | null; // 가장 최근 세일가
   lowestPrice: number | null; // 역대 최저 판매가
   lowestPriceDate: string | null; // 역대 최저가가 찍힌 날짜
+  watched: boolean; // 관심 상품 여부
   history: PricePoint[]; // 오래된 → 최신
 }
