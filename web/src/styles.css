@@ -50,31 +50,33 @@ body {
   padding-right: 0;
 }
 
+.heart-icon {
+  display: block;
+}
+
 .heart-btn {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
   padding: 4px;
   border-radius: 6px;
-  filter: grayscale(1);
-  opacity: 0.55;
-  transition: filter 0.12s, opacity 0.12s, transform 0.12s;
+  display: inline-flex;
+  color: #cfcfcf; /* 기본: 연한 회색 테두리 */
+  transition: color 0.12s, transform 0.12s;
 }
 
 .heart-btn:hover {
-  opacity: 1;
+  color: #ff7aa2;
   transform: scale(1.15);
 }
 
 .heart-btn[aria-pressed='true'] {
-  filter: none;
-  opacity: 1;
+  color: #ff4d8d; /* 찜: 분홍색 채움 */
 }
 
 .heart-ro {
-  font-size: 14px;
+  display: inline-flex;
+  color: #ff4d8d;
 }
 
 /* 찜한 행 강조 + 핀 표시 */

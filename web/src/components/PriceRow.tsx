@@ -3,6 +3,7 @@ import { won } from '@/lib/format';
 import { PriceCell } from '@/components/PriceCell';
 import { ComparisonBadge } from '@/components/ComparisonBadge';
 import { TrendSparkline } from '@/components/TrendSparkline';
+import { HeartIcon } from '@/components/HeartIcon';
 
 interface PriceRowProps {
   product: Product;
@@ -30,11 +31,11 @@ export function PriceRow({ product, isLive, onToggleWatch }: PriceRowProps) {
             title={product.watched ? '찜 해제' : '찜하기'}
             onClick={() => onToggleWatch(product.goodsNo)}
           >
-            {product.watched ? '❤️' : '🤍'}
+            <HeartIcon filled={product.watched} />
           </button>
         ) : product.watched ? (
           <span className="heart-ro" title="찜한 상품">
-            ❤️
+            <HeartIcon filled />
           </span>
         ) : null}
       </td>
