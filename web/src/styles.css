@@ -168,6 +168,40 @@ body {
   font-weight: 600;
 }
 
+/* 역대 최저가 */
+.lowest {
+  color: #8e44ad;
+  font-weight: 600;
+}
+
+.lowest-date {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #aaa;
+}
+
+.fire-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ffe9e0;
+  color: #d63a1e;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 현재가가 역대 최저가에 닿은 행 강조 */
+.row-lowest {
+  background: #fff8f5;
+}
+
+.row-lowest:hover {
+  background: #fff2ec;
+}
+
 .pct {
   color: #e74c3c;
   font-size: 11px;

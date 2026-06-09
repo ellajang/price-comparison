@@ -18,5 +18,7 @@ export interface Product {
   currentPrice: number | null; // 평소(비세일) 최신 판매가
   saleFloor: number | null; // 세일 구간 최저가
   recentSale: number | null; // 가장 최근 세일가
+  lowestPrice: number | null; // 역대 최저 판매가
+  lowestPriceDate: string | null; // 역대 최저가가 찍힌 날짜
   history: PricePoint[]; // 오래된 → 최신
 }

@@ -8,7 +8,7 @@ const allSnapshots = db.prepare(`
 `);
 
 const allProducts = db.prepare(`
-  SELECT goods_no, brand, name, url, image_url FROM products
+  SELECT goods_no, brand, name, url, image_url, lowest_price, lowest_price_date FROM products
 `);
 
 // 상품마다 history 배열을 임베드 (한 번의 fetch로 표 + 스파크라인 둘 다)
@@ -41,6 +41,8 @@ function getProducts() {
       url: p.url,
       image: p.image_url,
       category: latest ? latest.category : null, // 가장 최근 스냅샷의 카테고리
+      lowestPrice: p.lowest_price, // 역대 최저 판매가
+      lowestPriceDate: p.lowest_price_date,
 
       listPrice: listPrices.length ? Math.max(...listPrices) : null,
       currentPrice: normals.length ? normals[normals.length - 1].salePrice : null,

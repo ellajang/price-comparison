@@ -9,8 +9,16 @@ interface PriceRowProps {
 }
 
 export function PriceRow({ product }: PriceRowProps) {
+  // 현재(가장 최근) 판매가가 역대 최저가에 닿았는가 — 추적 이력이 2개 이상일 때만 (1일치 노이즈 방지)
+  const latestSale = product.history.at(-1)?.salePrice ?? null;
+  const isLowestNow =
+    product.lowestPrice != null &&
+    latestSale != null &&
+    latestSale <= product.lowestPrice &&
+    product.history.length > 1;
+
   return (
-    <tr>
+    <tr className={isLowestNow ? 'row-lowest' : undefined}>
       <td className="thumb">
         {product.image ? (
           <img src={product.image} alt="" loading="lazy" decoding="async" width={44} height={44} />
@@ -30,7 +38,13 @@ export function PriceRow({ product }: PriceRowProps) {
       </td>
       <td className="num list">{won(product.listPrice)}</td>
       <PriceCell price={product.currentPrice} listPrice={product.listPrice} variant="cur" />
-      <PriceCell price={product.saleFloor} listPrice={product.listPrice} variant="sale" />
+      <td className="num lowest">
+        {won(product.lowestPrice)}
+        {product.lowestPriceDate && (
+          <span className="lowest-date"> {product.lowestPriceDate.slice(2)}</span>
+        )}
+        {isLowestNow && <span className="fire-badge">🔥 역대최저</span>}
+      </td>
       <PriceCell price={product.recentSale} listPrice={product.listPrice} variant="recent" />
       <td className="trend">
         <TrendSparkline history={product.history} />

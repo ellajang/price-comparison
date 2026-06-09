@@ -15,7 +15,7 @@ export function PriceTable({ products }: PriceTableProps) {
           <th>상품명</th>
           <th className="num">정가</th>
           <th className="num">현재가</th>
-          <th className="num">세일 최저가</th>
+          <th className="num">역대 최저가</th>
           <th className="num">최근 세일가</th>
           <th>추이</th>
           <th>비교</th>
