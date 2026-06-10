@@ -16,7 +16,7 @@ body {
 }
 
 .app {
-  max-width: 1100px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 24px 20px 64px;
 }
@@ -169,7 +169,7 @@ body {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow:hidden 제거 — peak tooltip이 표 밖으로 나가도 안 잘리게 */
 }
 
 .price-table th,
