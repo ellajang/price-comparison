@@ -6,18 +6,21 @@ interface PeakGaugeProps {
   history: PricePoint[];
 }
 
-// 역대 최고가 대비 현재가 상태 + 직전 대비 방향(오름/내림). tooltip엔 최고가 날짜·세일여부.
+// 낙폭이 이보다 크면 "옵션(기획/단품) 변동 가능성"으로 의심
+const SUSPECT_DROP = 50;
+
+// 역대 최고가 대비 현재가 상태 + 직전 대비 방향. 낙폭이 비정상적으로 크면 옵션변동 의심 표시.
 export function PeakGauge({ history }: PeakGaugeProps) {
   const [hover, setHover] = useState(false);
   const pts = history.filter((p) => p.salePrice != null);
 
   if (pts.length === 0) return <span className="muted">-</span>;
 
-  // 최고가 지점 (동점이면 가장 이른 날짜)
   const peakPt = pts.reduce((a, b) => ((b.salePrice as number) > (a.salePrice as number) ? b : a));
   const peak = peakPt.salePrice as number;
   const current = pts[pts.length - 1].salePrice as number;
   const prev = pts.length >= 2 ? (pts[pts.length - 2].salePrice as number) : null;
+  const dropFromPeak = peak > 0 ? Math.round((1 - current / peak) * 100) : 0;
 
   let state: 'down' | 'up' | 'flat';
   let label: string;
@@ -25,7 +28,7 @@ export function PeakGauge({ history }: PeakGaugeProps) {
 
   if (current < peak) {
     state = 'down';
-    label = `▼ ${Math.round((1 - current / peak) * 100)}%`;
+    label = `▼ ${dropFromPeak}%`;
     fill = Math.max(4, Math.round((current / peak) * 100));
   } else if (prev != null && current > prev) {
     state = 'up';
@@ -37,6 +40,9 @@ export function PeakGauge({ history }: PeakGaugeProps) {
     fill = 100;
   }
 
+  // 낙폭이 너무 크면 진짜 세일보단 옵션(기획↔단품) 변동일 가능성
+  const suspectVariant = state === 'down' && dropFromPeak >= SUSPECT_DROP;
+
   return (
     <span
       className="peak-wrap"
@@ -47,10 +53,16 @@ export function PeakGauge({ history }: PeakGaugeProps) {
         <span className={`peak-fill ${state}`} style={{ width: `${fill}%` }} />
       </span>
       <span className={`peak-label ${state}`}>{label}</span>
+      {suspectVariant && (
+        <span className="opt-flag" title="옵션(기획/단품) 변동 가능성 — 실제 가격 인하가 아닐 수 있어요">
+          ?
+        </span>
+      )}
       {hover && (
         <span className="peak-tip">
           최고 {won(peak)} ({shortDate(peakPt.capturedAt)}
           {peakPt.isSalePeriod ? ' ⚠️세일' : ''}) · 현재 {won(current)}
+          {suspectVariant ? ' · 옵션 변동 가능성?' : ''}
         </span>
       )}
     </span>
