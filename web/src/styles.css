@@ -321,6 +321,10 @@ body {
   background: #27ae60;
 }
 
+.peak-fill.up {
+  background: #c0392b;
+}
+
 .peak-fill.flat {
   background: #ccc;
 }
@@ -333,6 +337,10 @@ body {
 
 .peak-label.down {
   color: #27ae60;
+}
+
+.peak-label.up {
+  color: #c0392b;
 }
 
 .peak-label.flat {
