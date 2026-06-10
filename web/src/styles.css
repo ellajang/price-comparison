@@ -362,6 +362,11 @@ body {
   cursor: help;
 }
 
+.opt-q {
+  display: block;
+  transform: translateY(1px); /* ? 글리프가 위로 쏠려서 시각적 중앙 보정 */
+}
+
 .peak-tip {
   position: absolute;
   bottom: 100%;

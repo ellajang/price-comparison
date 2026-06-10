@@ -55,7 +55,7 @@ export function PeakGauge({ history }: PeakGaugeProps) {
       <span className={`peak-label ${state}`}>{label}</span>
       {suspectVariant && (
         <span className="opt-flag" title="옵션(기획/단품) 변동 가능성 — 실제 가격 인하가 아닐 수 있어요">
-          ?
+          <span className="opt-q">?</span>
         </span>
       )}
       {hover && (
