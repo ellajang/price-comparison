@@ -20,7 +20,7 @@ export function PriceTable({ products, isLive, onToggleWatch }: PriceTableProps)
           <th className="num">현재가</th>
           <th className="num">역대 최저가</th>
           <th className="num">최근 세일가</th>
-          <th>추이</th>
+          <th>최고가 대비</th>
           <th>비교</th>
         </tr>
       </thead>

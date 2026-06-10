@@ -2,7 +2,7 @@ import type { Product } from '@/types';
 import { won } from '@/lib/format';
 import { PriceCell } from '@/components/PriceCell';
 import { ComparisonBadge } from '@/components/ComparisonBadge';
-import { TrendSparkline } from '@/components/TrendSparkline';
+import { PeakGauge } from '@/components/PeakGauge';
 import { HeartIcon } from '@/components/HeartIcon';
 
 interface PriceRowProps {
@@ -67,7 +67,7 @@ export function PriceRow({ product, isLive, onToggleWatch }: PriceRowProps) {
       </td>
       <PriceCell price={product.recentSale} listPrice={product.listPrice} variant="recent" />
       <td className="trend">
-        <TrendSparkline history={product.history} />
+        <PeakGauge history={product.history} />
       </td>
       <ComparisonBadge currentPrice={product.currentPrice} saleFloor={product.saleFloor} />
     </tr>

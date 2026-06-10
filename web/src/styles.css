@@ -295,6 +295,65 @@ body {
   width: 130px;
 }
 
+/* 최고가 대비 게이지 */
+.peak-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.peak-bar {
+  width: 70px;
+  height: 6px;
+  border-radius: 999px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.peak-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.peak-fill.down {
+  background: #27ae60;
+}
+
+.peak-fill.flat {
+  background: #ccc;
+}
+
+.peak-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.peak-label.down {
+  color: #27ae60;
+}
+
+.peak-label.flat {
+  color: #aaa;
+}
+
+.peak-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  padding: 3px 7px;
+  background: #2c3e50;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+
 .thumb {
   width: 52px;
   padding-right: 0;
