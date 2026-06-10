@@ -169,7 +169,6 @@ body {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
-  /* overflow:hidden 제거 — peak tooltip이 표 밖으로 나가도 안 잘리게 */
 }
 
 .price-table th,
