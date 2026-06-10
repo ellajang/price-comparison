@@ -25,11 +25,11 @@ export function PeakGauge({ history }: PeakGaugeProps) {
 
   if (current < peak) {
     state = 'down';
-    label = `↓${Math.round((1 - current / peak) * 100)}%`;
+    label = `▼ ${Math.round((1 - current / peak) * 100)}%`;
     fill = Math.max(4, Math.round((current / peak) * 100));
   } else if (prev != null && current > prev) {
     state = 'up';
-    label = `↑${Math.round((current / prev - 1) * 100)}%`;
+    label = `▲ ${Math.round((current / prev - 1) * 100)}%`;
     fill = 100;
   } else {
     state = 'flat';
