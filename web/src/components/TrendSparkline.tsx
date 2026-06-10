@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState, type MouseEvent } from 'react';
 import type { PricePoint } from '@/types';
 import { won } from '@/lib/format';
 
@@ -8,63 +8,84 @@ interface TrendSparklineProps {
   height?: number;
 }
 
-// 판매가(salePrice) 시계열을 의존성 없이 SVG 선으로. 세일 구간 점은 빨간 마커.
+// 판매가(salePrice) 시계열 SVG 선. 마우스 올리면 그 지점의 날짜·가격 툴팁 표시.
 export function TrendSparkline({ history, width = 120, height = 32 }: TrendSparklineProps) {
   const gradientId = useId();
+  const [hover, setHover] = useState<number | null>(null);
   const points = history.filter((p) => p.salePrice != null);
 
-  if (points.length === 0) {
-    return <span className="muted">-</span>;
-  }
-  if (points.length === 1) {
-    return <span className="muted">추이 부족</span>;
-  }
+  if (points.length === 0) return <span className="muted">-</span>;
+  if (points.length === 1) return <span className="muted">추이 부족</span>;
 
   const prices = points.map((p) => p.salePrice as number);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  const span = max - min || 1; // 평평하면 0 나눗셈 방지
+  const span = max - min || 1;
   const pad = 3;
 
   const x = (i: number) => (i / (points.length - 1)) * (width - pad * 2) + pad;
   const y = (price: number) => height - pad - ((price - min) / span) * (height - pad * 2);
 
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i)},${y(p.salePrice as number)}`).join(' ');
+  const linePath = points.map((_, i) => `${i === 0 ? 'M' : 'L'}${x(i)},${y(prices[i])}`).join(' ');
   const areaPath = `${linePath} L${x(points.length - 1)},${height} L${x(0)},${height} Z`;
 
-  const first = prices[0];
   const last = prices[prices.length - 1];
-  const trendUp = last > first;
-  const stroke = last < first ? '#27ae60' : last > first ? '#c0392b' : '#999';
+  const stroke = last < prices[0] ? '#27ae60' : last > prices[0] ? '#c0392b' : '#999';
 
-  const title = `${points[0].capturedAt} ${won(first)} → ${points[points.length - 1].capturedAt} ${won(last)}`;
+  // 마우스 x → 가장 가까운 점 인덱스
+  const handleMove = (e: MouseEvent<SVGRectElement>) => {
+    const ratio = (e.nativeEvent.offsetX - pad) / (width - pad * 2);
+    const i = Math.max(0, Math.min(points.length - 1, Math.round(ratio * (points.length - 1))));
+    setHover(i);
+  };
 
   return (
-    <svg
-      className="sparkline"
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`가격 추이: ${title}`}
-    >
-      <title>{title}</title>
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={stroke} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill={`url(#${gradientId})`} />
-      <path d={linePath} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
-      {points.map((p, i) =>
-        p.isSalePeriod ? (
-          <circle key={p.capturedAt} cx={x(i)} cy={y(p.salePrice as number)} r="2.2" fill="#c0392b" />
-        ) : null
+    <span className="sparkline-wrap">
+      <svg className="sparkline" width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={stroke} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={stroke} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#${gradientId})`} />
+        <path d={linePath} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
+
+        {/* hover 가이드선 */}
+        {hover !== null && (
+          <line x1={x(hover)} y1={0} x2={x(hover)} y2={height} stroke="#bbb" strokeWidth="1" strokeDasharray="2 2" />
+        )}
+
+        {/* 점 — hover한 점은 강조 */}
+        {points.map((p, i) => (
+          <circle
+            key={p.capturedAt}
+            cx={x(i)}
+            cy={y(prices[i])}
+            r={hover === i ? 3.2 : p.isSalePeriod ? 2.2 : 0}
+            fill={p.isSalePeriod ? '#c0392b' : stroke}
+          />
+        ))}
+        <circle cx={x(points.length - 1)} cy={y(last)} r="2.2" fill={stroke} />
+
+        {/* 전체를 덮는 투명 영역에서 마우스 추적 */}
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill="transparent"
+          onMouseMove={handleMove}
+          onMouseLeave={() => setHover(null)}
+        />
+      </svg>
+
+      {hover !== null && (
+        <span className="spark-tip" style={{ left: x(hover) }}>
+          <b>{won(prices[hover])}</b>
+          <em>{points[hover].capturedAt.slice(2)}</em>
+        </span>
       )}
-      <circle cx={x(points.length - 1)} cy={y(last)} r="2.2" fill={stroke} aria-hidden="true" />
-      {/* trendUp는 색으로 이미 표현되지만, 스크린리더용 텍스트는 aria-label에 포함됨 */}
-      <desc>{trendUp ? '상승' : '하락 또는 유지'}</desc>
-    </svg>
+    </span>
   );
 }
