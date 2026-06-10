@@ -351,11 +351,11 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  background: #e3e3e3;
-  color: #777;
+  background: #3498db;
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   cursor: help;
