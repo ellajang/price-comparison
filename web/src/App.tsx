@@ -1,13 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 import { PriceTable } from '@/components/PriceTable';
 import { CategoryFilter, type CategoryCount } from '@/components/CategoryFilter';
+import { Pagination } from '@/components/Pagination';
+
+const PAGE_SIZE = 50;
 
 export function App() {
   const { products, isLoading, error, isLive, toggleWatch } = useProducts();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [watchedOnly, setWatchedOnly] = useState(false);
+  const [page, setPage] = useState(0);
 
   // 카테고리별 개수 (개수 많은 순)
   const categories = useMemo<CategoryCount[]>(() => {
@@ -34,8 +38,24 @@ export function App() {
     return [...matched].sort((a, b) => Number(b.watched) - Number(a.watched));
   }, [products, query, category, watchedOnly]);
 
+  // 필터/검색이 바뀌면 1페이지로 되돌림
+  useEffect(() => {
+    setPage(0);
+  }, [query, category, watchedOnly]);
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const safePage = Math.min(page, Math.max(0, pageCount - 1));
+  const paged = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  const goToPage = (p: number) => {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const watchedCount = products.filter((p) => p.watched).length;
   const isFiltering = category !== null || watchedOnly || query.trim() !== '';
+  const rangeStart = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(filtered.length, (safePage + 1) * PAGE_SIZE);
 
   return (
     <main className="app">
@@ -79,8 +99,15 @@ export function App() {
                 · 표시 <b>{filtered.length}</b>
               </>
             )}
+            {filtered.length > 0 && (
+              <>
+                {' '}
+                · {rangeStart}–{rangeEnd}번째 보는 중
+              </>
+            )}
           </p>
-          <PriceTable products={filtered} isLive={isLive} onToggleWatch={toggleWatch} />
+          <PriceTable products={paged} isLive={isLive} onToggleWatch={toggleWatch} />
+          <Pagination page={safePage} pageCount={pageCount} onChange={goToPage} />
         </>
       )}
     </main>
