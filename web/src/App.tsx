@@ -3,14 +3,42 @@ import { useProducts } from '@/hooks/useProducts';
 import { PriceTable } from '@/components/PriceTable';
 import { CategoryFilter, type CategoryCount } from '@/components/CategoryFilter';
 import { Pagination } from '@/components/Pagination';
+import type { Product } from '@/types';
 
 const PAGE_SIZE = 50;
+
+type SortKey = 'default' | 'discount' | 'priceAsc' | 'priceDesc';
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'default', label: '기본순' },
+  { key: 'discount', label: '할인율순 (최고가 대비)' },
+  { key: 'priceAsc', label: '가격 낮은순' },
+  { key: 'priceDesc', label: '가격 높은순' },
+];
+
+// 가장 최근 판매가
+const latestSale = (p: Product): number | null => {
+  for (let i = p.history.length - 1; i >= 0; i--) {
+    if (p.history[i].salePrice != null) return p.history[i].salePrice;
+  }
+  return null;
+};
+
+// 역대 최고가 대비 하락률 (0~1)
+const dropRatio = (p: Product): number => {
+  const prices = p.history.map((h) => h.salePrice).filter((v): v is number => v != null);
+  if (prices.length === 0) return 0;
+  const peak = Math.max(...prices);
+  const cur = prices[prices.length - 1];
+  return peak > 0 ? 1 - cur / peak : 0;
+};
 
 export function App() {
   const { products, isLoading, error, isLive, toggleWatch } = useProducts();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [watchedOnly, setWatchedOnly] = useState(false);
+  const [sort, setSort] = useState<SortKey>('default');
   const [page, setPage] = useState(0);
 
   // 카테고리별 개수 (개수 많은 순)
@@ -34,14 +62,22 @@ export function App() {
       }
       return true;
     });
-    // 찜한 상품을 최상단으로 핀 (그 안에선 기존 순서 유지)
-    return [...matched].sort((a, b) => Number(b.watched) - Number(a.watched));
-  }, [products, query, category, watchedOnly]);
 
-  // 필터/검색이 바뀌면 1페이지로 되돌림
+    const byKey: Record<SortKey, (a: Product, b: Product) => number> = {
+      default: () => 0,
+      discount: (a, b) => dropRatio(b) - dropRatio(a),
+      priceAsc: (a, b) => (latestSale(a) ?? Infinity) - (latestSale(b) ?? Infinity),
+      priceDesc: (a, b) => (latestSale(b) ?? -Infinity) - (latestSale(a) ?? -Infinity),
+    };
+
+    // 찜한 상품 최상단 핀 → 그 안에서 선택한 정렬
+    return [...matched].sort((a, b) => Number(b.watched) - Number(a.watched) || byKey[sort](a, b));
+  }, [products, query, category, watchedOnly, sort]);
+
+  // 필터/검색/정렬이 바뀌면 1페이지로 되돌림
   useEffect(() => {
     setPage(0);
-  }, [query, category, watchedOnly]);
+  }, [query, category, watchedOnly, sort]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const safePage = Math.min(page, Math.max(0, pageCount - 1));
@@ -70,6 +106,18 @@ export function App() {
           >
             ⭐ 관심상품 <span className="chip-cnt">{watchedCount}</span>
           </button>
+          <select
+            className="sort-select"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label="정렬"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.key} value={o.key}>
+                {o.label}
+              </option>
+            ))}
+          </select>
           <input
             type="search"
             className="search"

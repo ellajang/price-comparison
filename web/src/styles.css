@@ -144,45 +144,67 @@ body {
   margin: 0 0 16px;
 }
 
-/* 페이지네이션 */
-.pager {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin: 20px 0 8px;
-}
-
-.pager-btn {
+/* 정렬 드롭다운 */
+.sort-select {
   font: inherit;
   font-size: 13px;
-  padding: 6px 12px;
+  padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   background: #fff;
   color: #444;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
 }
 
-.pager-btn:hover:not(:disabled) {
+.sort-select:focus {
+  outline: none;
   border-color: #2c3e50;
-  background: #f7f7f7;
 }
 
-.pager-btn:disabled {
+/* 숫자 페이지네이션 */
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 24px 0 8px;
+}
+
+.pager-num,
+.pager-arrow {
+  font: inherit;
+  font-size: 13px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.pager-num:hover:not(.on),
+.pager-arrow:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.pager-num.on {
+  background: #2c3e50;
+  color: #fff;
+  font-weight: 700;
+}
+
+.pager-arrow:disabled {
   color: #ccc;
   cursor: default;
 }
 
-.pager-info {
-  font-size: 13px;
-  color: #555;
-  padding: 0 8px;
-}
-
-.pager-info b {
-  color: #2c3e50;
+.pager-gap {
+  min-width: 20px;
+  text-align: center;
+  color: #aaa;
 }
 
 .summary b {
