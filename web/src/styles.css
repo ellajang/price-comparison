@@ -356,8 +356,9 @@ body {
   border-radius: 50%;
   background: #34495e;
   color: #fff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
+  line-height: 1;
   cursor: help;
 }
 
