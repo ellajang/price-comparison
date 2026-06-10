@@ -32,8 +32,8 @@ export function TrendSparkline({ history, width = 120, height = 32 }: TrendSpark
   const last = prices[prices.length - 1];
   const stroke = last < prices[0] ? '#27ae60' : last > prices[0] ? '#c0392b' : '#999';
 
-  // 마우스 x → 가장 가까운 점 인덱스
-  const handleMove = (e: MouseEvent<SVGRectElement>) => {
+  // 마우스 x → 가장 가까운 점 인덱스 (들어오는 즉시 + 움직일 때 모두)
+  const handlePoint = (e: MouseEvent<SVGRectElement>) => {
     const ratio = (e.nativeEvent.offsetX - pad) / (width - pad * 2);
     const i = Math.max(0, Math.min(points.length - 1, Math.round(ratio * (points.length - 1))));
     setHover(i);
@@ -75,7 +75,8 @@ export function TrendSparkline({ history, width = 120, height = 32 }: TrendSpark
           width={width}
           height={height}
           fill="transparent"
-          onMouseMove={handleMove}
+          onMouseEnter={handlePoint}
+          onMouseMove={handlePoint}
           onMouseLeave={() => setHover(null)}
         />
       </svg>
