@@ -1,21 +1,23 @@
 name: Deploy to GitHub Pages
 
 # 로컬에서 스크랩 → gen → 커밋/푸시하면, CI는 빌드+배포만 (스크래핑은 CI에서 안 함)
-# 배포: dist를 gh-pages 브랜치에 푸시 (deploy-pages API가 이 레포에서 계속 실패해 우회)
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write # gh-pages 브랜치에 푸시하려면 필요
+  contents: read
+  pages: write
+  id-token: write
 
+# 동시 배포 1건으로 제한 (진행 중 배포는 취소)
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,9 +38,16 @@ jobs:
         env:
           PAGES_BASE: /price-comparison/
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: web/dist
-          # .nojekyll 자동 추가(기본) → 정적 파일 그대로 서빙
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
