@@ -41,7 +41,14 @@ export function PriceRow({ product, isLive, onToggleWatch }: PriceRowProps) {
       </td>
       <td className="thumb">
         {product.image ? (
-          <img src={product.image} alt="" loading="lazy" decoding="async" width={44} height={44} />
+          <img
+            src={product.image}
+            alt={product.name ?? ''}
+            loading="lazy"
+            decoding="async"
+            width={44}
+            height={44}
+          />
         ) : (
           <span className="thumb-empty" aria-hidden="true" />
         )}

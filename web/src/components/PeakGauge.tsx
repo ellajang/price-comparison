@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { PricePoint } from '@/types';
 import { shortDate, won } from '@/lib/format';
+import { peakPoint, salePrices } from '@/lib/history';
 
 interface PeakGaugeProps {
   history: PricePoint[];
@@ -12,14 +13,14 @@ const SUSPECT_DROP = 50;
 // 역대 최고가 대비 현재가 상태 + 직전 대비 방향. 낙폭이 비정상적으로 크면 옵션변동 의심 표시.
 export function PeakGauge({ history }: PeakGaugeProps) {
   const [hover, setHover] = useState(false);
-  const pts = history.filter((p) => p.salePrice != null);
+  const prices = salePrices(history);
+  const peakPt = peakPoint(history);
 
-  if (pts.length === 0) return <span className="muted">-</span>;
+  if (prices.length === 0 || peakPt === null) return <span className="muted">-</span>;
 
-  const peakPt = pts.reduce((a, b) => ((b.salePrice as number) > (a.salePrice as number) ? b : a));
   const peak = peakPt.salePrice as number;
-  const current = pts[pts.length - 1].salePrice as number;
-  const prev = pts.length >= 2 ? (pts[pts.length - 2].salePrice as number) : null;
+  const current = prices[prices.length - 1];
+  const prev = prices.length >= 2 ? prices[prices.length - 2] : null;
   const dropFromPeak = peak > 0 ? Math.round((1 - current / peak) * 100) : 0;
 
   let state: 'down' | 'up' | 'flat';
@@ -54,8 +55,15 @@ export function PeakGauge({ history }: PeakGaugeProps) {
       </span>
       <span className={`peak-label ${state}`}>{label}</span>
       {suspectVariant && (
-        <span className="opt-flag" title="옵션(기획/단품) 변동 가능성 — 실제 가격 인하가 아닐 수 있어요">
-          <span className="opt-q">?</span>
+        <span
+          className="opt-flag"
+          role="img"
+          aria-label="옵션(기획/단품) 변동 가능성 — 실제 가격 인하가 아닐 수 있음"
+          title="옵션(기획/단품) 변동 가능성 — 실제 가격 인하가 아닐 수 있어요"
+        >
+          <span className="opt-q" aria-hidden="true">
+            ?
+          </span>
         </span>
       )}
       {hover && (

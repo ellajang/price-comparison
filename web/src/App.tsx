@@ -3,6 +3,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { PriceTable } from '@/components/PriceTable';
 import { CategoryFilter, type CategoryCount } from '@/components/CategoryFilter';
 import { Pagination } from '@/components/Pagination';
+import { dropRatio, latestSale } from '@/lib/history';
 import type { Product } from '@/types';
 
 const PAGE_SIZE = 50;
@@ -15,23 +16,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'priceAsc', label: '가격 낮은순' },
   { key: 'priceDesc', label: '가격 높은순' },
 ];
-
-// 가장 최근 판매가
-const latestSale = (p: Product): number | null => {
-  for (let i = p.history.length - 1; i >= 0; i--) {
-    if (p.history[i].salePrice != null) return p.history[i].salePrice;
-  }
-  return null;
-};
-
-// 역대 최고가 대비 하락률 (0~1)
-const dropRatio = (p: Product): number => {
-  const prices = p.history.map((h) => h.salePrice).filter((v): v is number => v != null);
-  if (prices.length === 0) return 0;
-  const peak = Math.max(...prices);
-  const cur = prices[prices.length - 1];
-  return peak > 0 ? 1 - cur / peak : 0;
-};
 
 export function App() {
   const { products, isLoading, error, isLive, toggleWatch } = useProducts();
@@ -65,9 +49,9 @@ export function App() {
 
     const byKey: Record<SortKey, (a: Product, b: Product) => number> = {
       default: () => 0,
-      discount: (a, b) => dropRatio(b) - dropRatio(a),
-      priceAsc: (a, b) => (latestSale(a) ?? Infinity) - (latestSale(b) ?? Infinity),
-      priceDesc: (a, b) => (latestSale(b) ?? -Infinity) - (latestSale(a) ?? -Infinity),
+      discount: (a, b) => dropRatio(b.history) - dropRatio(a.history),
+      priceAsc: (a, b) => (latestSale(a.history) ?? Infinity) - (latestSale(b.history) ?? Infinity),
+      priceDesc: (a, b) => (latestSale(b.history) ?? -Infinity) - (latestSale(a.history) ?? -Infinity),
     };
 
     // 찜한 상품 최상단 핀 → 그 안에서 선택한 정렬
@@ -128,8 +112,16 @@ export function App() {
         </div>
       </header>
 
-      {isLoading && <p className="state">불러오는 중…</p>}
-      {error && <p className="state error">불러오기 실패: {error}</p>}
+      {isLoading && (
+        <p className="state" aria-live="polite">
+          불러오는 중…
+        </p>
+      )}
+      {error && (
+        <p className="state error" role="alert">
+          불러오기 실패: {error}
+        </p>
+      )}
 
       {!isLoading && !error && (
         <>
